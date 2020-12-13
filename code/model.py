@@ -38,6 +38,7 @@ class Detect_12Net:
             self.fc4_w = weight_variable(shape=[16,2],name="fc4_w",layer_type="connected")
             self.fc4_b = bias_variable(shape=[2],name="fc4_b")
             self.fc4_out = tf.matmul(self.fc3_out,self.fc4_w) + self.fc4_b
+            self.net_prob = tf.nn.softmax(logits=self.fc4_out)
             self.net_out = self.fc4_out
             if is_train:
                 self.loss = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(logits=self.fc4_out, labels=self.targets))

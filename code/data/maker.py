@@ -83,7 +83,7 @@ def slide_window(img,stride=[5,5],win=[12,12]):
     for y in range(0,h,stride[1]):
         for x in range(0,w,stride[0]):
             window = img[y:y+win[1],x:x+win[0]]
-            yield window
+            yield window,[x/w,y/h,(x+win[0])/w,(y+win[1])/h]
 def make_neg_data(size=1000):
     print('making pos data........')
     index = 0

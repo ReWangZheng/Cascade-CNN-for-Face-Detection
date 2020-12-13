@@ -55,6 +55,7 @@ class ImageDateSet:
     def load_img(self,img_path):
         print(img_path[0])
         return img_path
+
 def show_img(img,b=True,p=0.05):
     plt.imshow(img)
     plt.show(block=b)
@@ -64,13 +65,17 @@ def show_img(img,b=True,p=0.05):
 def img_pyramids(img,pyramcount=3,winsize=(48,48),step=(24,24)):
     pyramids = [np.copy(img)]
     imgs_win = []
-    for i in range(0,pyramcount):
-        pyr_img = cv2.pyrDown(pyramids[i])
+    bbox = []
+    for i in range(1,pyramcount):
+        pyr_img = cv2.pyrDown(pyramids[i-1])
         pyramids.append(pyr_img)
     for image in pyramids:
-        for img_win in slide_window(image,stride=step,win=winsize):
+        for img_win,box in slide_window(image,stride=step,win=winsize):
+            if img_win.shape[0] != winsize[0] or img_win.shape[1] != winsize[1]:
+                continue
             imgs_win.append(img_win)
-    return pyramids,imgs_win
+            bbox.append(box)
+    return pyramids,imgs_win,bbox
 
 def convert_box_pbox(box):
     x,y,w,h = box
@@ -97,7 +102,6 @@ def overlap(box1,box2):
     in_area = w_in * h_in
     box1_area = w_1 * h_1
     box2_area = w_2 * h_2
-
     iou = in_area / float(box1_area+box2_area)
     box1_iou = in_area / float(box1_area)
     box2_iou = in_area / float(box2_area)
@@ -172,8 +176,15 @@ def test_NMS():
     NMS_box = NMS(bboxs,prob,thread=0.1)
     drwa_bbox(img,NMS_box,show=True)
 
+def one_hot(targets,deepth):
+    #设置类别的数量
+    num_classes = deepth
+    #需要转换的整数
+    #将整数转为一个10位的one hot编码
+    return np.array(np.eye(deepth)[targets, :],dtype=int)
 
 # Dataset test
 if __name__ == '__main__':
     #test_pyr()
-    test_NMS()
+    # test_NMS()
+    one_hot([1,5,4,8,6,1],10)

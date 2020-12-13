@@ -41,16 +41,12 @@ def train():
             if step % 5 == 0:
                 test_input, test_target, test_patterns = sess.run(ele_test)
 
-                lossv,net12_out= sess.run([detect_12net.loss,detect_12net.fc4_out],
+                lossv,acc= sess.run([detect_12net.loss,detect_12net.accuracy()],
                                           feed_dict={detect_12net.inputs: test_input,
                                                     detect_12net.targets: test_target})
-                acc = np.sum(np.argmax(net12_out, axis=1)==np.argmax(target,axis=1)) / len(net12_out)
-                print('step {},loss:{},acc:{},activation:{}'.format(step, lossv,acc,np.sum(net12_out)))
-                saver.save(sess,global_step=step,save_path='../models/', write_meta_graph=False)
-                print(np.argmax(test_target[:10],axis=1))
-                print(np.argmax(net12_out[:10],axis=1))
+                print('step {},loss:{},acc:{}'.format(step, lossv,acc))
+                saver.save(sess,global_step=step,save_path='../models/')
                 print('\n')
             step += 1
 if __name__ == '__main__':
-    clean()
     train()
