@@ -42,6 +42,13 @@ class Detect_12Net:
             if is_train:
                 self.loss = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(logits=self.fc4_out, labels=self.targets))
                 self.train_step = tf.train.AdamOptimizer(lr).minimize(self.loss)
+    def accuracy(self):
+        net_o = tf.argmax(self.fc4_out,axis=1)
+        tar_o = tf.argmax(self.targets,axis=1)
+        correct_prediction = tf.equal(net_o,tar_o)
+        acc = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+        return acc
+
 class Calibrate_net12:
     def __init__(self,size = (12,12,3),patterns = 45,is_train = True,lr = 0.001):
         self.inputs = tf.placeholder(dtype=tf.float32,

@@ -63,8 +63,6 @@ def example_3():
                 print(eles)
             except tf.errors.OutOfRangeError:
                 break
-
-
 if __name__ == '__main__':
     with tf.Session() as sess:
         print(sess.run(tf.one_hot([1,2,3],10)))

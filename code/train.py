@@ -2,19 +2,25 @@ from data.dataset import ImageDateSet
 from model import Detect_12Net
 import tensorflow as tf
 import numpy as np
+def clean():
+    import os
+    os.system('rm -r ../logs/* ../models/*')
 
 def train():
     imgdataset = ImageDateSet('/home/dataset/FDDB/pos',
                               '/home/dataset/FDDB/neg',
-                              batch=100,img_size=(48,48))
+                              batch=500)
     train_op, ele_train, test_op, ele_test = imgdataset.getIterator()
-    detect_12net = Detect_12Net(size=(48,48,3))
-
-    loss = tf.summary.scalar('loss',detect_12net.loss)
-    acc_v = tf.placeholder(dtype=tf.float32)
-    acc_summary = tf.summary.scalar("acc",acc_v)
-    loss_summary = tf.summary.merge([loss])
+    detect_12net = Detect_12Net(lr=0.001)
     step = 0
+    '''
+    create summary
+    '''
+    with tf.name_scope('net12'):
+        tf.summary.scalar('loss_value',detect_12net.loss)
+        tf.summary.histogram('activation_',detect_12net.fc3_out)
+        tf.summary.scalar('accuracy',detect_12net.accuracy())
+    summary = tf.summary.merge_all()
     with tf.Session() as sess:
         fw = tf.summary.FileWriter('../logs/', sess.graph)
         sess.run(tf.global_variables_initializer())
@@ -29,22 +35,22 @@ def train():
             if step == 30000:
                 break
             imgs, target, patterns = sess.run(ele_train)
-            _,s= sess.run([detect_12net.train_step,loss_summary], feed_dict={detect_12net.inputs: imgs,
+            _,sum = sess.run([detect_12net.train_step,summary], feed_dict={detect_12net.inputs: imgs,
                                                     detect_12net.targets: target})
-            fw.add_summary(s, step)
+            fw.add_summary(sum,step)
             if step % 5 == 0:
                 test_input, test_target, test_patterns = sess.run(ele_test)
-                lossv,net12_out= sess.run([detect_12net.loss,detect_12net.fc4_out], feed_dict={detect_12net.inputs: test_input,
-                                                               detect_12net.targets: test_target
-                                                               })
 
+                lossv,net12_out= sess.run([detect_12net.loss,detect_12net.fc4_out],
+                                          feed_dict={detect_12net.inputs: test_input,
+                                                    detect_12net.targets: test_target})
                 acc = np.sum(np.argmax(net12_out, axis=1)==np.argmax(target,axis=1)) / len(net12_out)
-                acc_s= sess.run(acc_summary,feed_dict={acc_v:acc})
-                fw.add_summary(acc_s,step)
-                print('step {},loss:{},acc:{}'.format(step, lossv,acc))
+                print('step {},loss:{},acc:{},activation:{}'.format(step, lossv,acc,np.sum(net12_out)))
                 saver.save(sess,global_step=step,save_path='../models/', write_meta_graph=False)
+                print(np.argmax(test_target[:10],axis=1))
+                print(np.argmax(net12_out[:10],axis=1))
+                print('\n')
             step += 1
-
-
 if __name__ == '__main__':
+    clean()
     train()
